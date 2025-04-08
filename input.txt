@@ -1,0 +1,34 @@
+begin program:
+begin VarDecl:
+  (x, int);
+  (y, int);
+  (msg, char);
+  (arr, int);
+end VarDecl
+
+print("Hello @", x);
+scan("@", x);
+
+x:=(1,10);
+y := (20,8);
+
+if (x <= y)
+  begin
+    print("x is less or equal @", x);
+  end
+else
+  print("x is greater");
+
+while (x < y)
+  begin
+    x := x + (1,10);
+    print("x incremented @", x);
+  end;
+
+for arr := (0,10) to (5,10) inc (1,10) do
+  begin
+    print("Index @", arr);
+  end;
+
+end program
+
