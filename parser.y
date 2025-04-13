@@ -1,7 +1,3 @@
-/* ===================== */
-/* ==== parser.y (Bison) */
-/* ===================== */
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +24,7 @@ int syntax_errors = 0;
 %token INT CHAR PRINT SCAN VARDECL INC DEC
 %token ADD_OP SUB_OP MUL_OP DIV_OP MOD_OP
 %token <str_val> ID STRING CHARACTER FORMAT_STRING INPUT_STRING
-%token <int_val> DEC_NUM BIN_NUM OCT_NUM
+%token <int_val> NUMBER
 %token IF_K ELSE_K WHILE_K FOR_K TO_K DO_K
 %token EQ NEQ GT LT GEQ LEQ
 %token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
@@ -37,18 +33,17 @@ int syntax_errors = 0;
 %type <str_val> VarName VarNameDecl
 %type <int_val> ArithmeticExpression Primary Factor Term
 
-/* Define precedence to resolve shift/reduce conflicts */
+
 %right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %left ADD_OP SUB_OP
 %left MUL_OP DIV_OP MOD_OP
 %nonassoc UMINUS
 %nonassoc EQ NEQ GT LT GEQ LEQ
 
-/* Explicitly set the IF-ELSE conflict resolution */
 %nonassoc IF_PREC
 %nonassoc ELSE_K
 
-/* Enable verbose error messages */
+
 %define parse.error verbose
 
 %start Program
@@ -81,14 +76,14 @@ Type:
     ;
 
 VarNameDecl:
-      ID                       
-    { 
-        $$ = $1; 
+      ID                      
+    {
+        $$ = $1;
         printf("Variable name: %s\n", $1);
     }
-    | ID LBRACK DEC_NUM RBRACK 
-    { 
-        $$ = $1; 
+    | ID LBRACK NUMBER RBRACK
+    {
+        $$ = $1;
         printf("Array declaration: %s[%d]\n", $1, $3);
     }
     ;
@@ -123,6 +118,7 @@ OutputStmt:
 
 PrintArg:
       STRING { printf("Print string literal\n"); }
+    | INPUT_STRING COMMA OutputArgList { printf("Print input format string with arguments\n"); }
     | FORMAT_STRING COMMA OutputArgList { printf("Print format string with arguments\n"); }
     ;
 
@@ -142,7 +138,7 @@ InputStmt:
     { printf("Parsed scan statement\n"); }
     ;
 
-/* Use the new INPUT_STRING token for scan input */
+
 InputString:
     INPUT_STRING
     ;
@@ -174,21 +170,22 @@ AssnArg:
     ;
 
 NUM:
-      DEC_NUM     { $$ = $1; printf("Decimal number: %d\n", $1); }
-    | BIN_NUM     { $$ = $1; printf("Binary number: %d\n", $1); }
-    | OCT_NUM     { $$ = $1; printf("Octal number: %d\n", $1); }
+      LPAR NUMBER COMMA NUMBER RPAR  
+    { 
+        $$ = $2; 
+        printf("Number: %d in base %d\n", $2, $4); 
+    }
     ;
 
 ConditionalStmt:
-      IF_K LPAR Condition RPAR StatementOrBlock %prec IF_PREC
+      IF_K LPAR Condition RPAR Block SEMICOLON %prec IF_PREC
     { printf("Parsed if statement\n"); }
-    | IF_K LPAR Condition RPAR StatementOrBlock ELSE_K StatementOrBlock
+    | IF_K LPAR Condition RPAR Block ELSE_K Block SEMICOLON
     { printf("Parsed if-else statement\n"); }
     ;
 
-StatementOrBlock:
-      Statement
-    | BEGIN_K StatementList END_K
+Block:
+    BEGIN_K StatementList END_K
     { printf("Parsed block of statements\n"); }
     ;
 
@@ -262,4 +259,7 @@ int main() {
         return 1;
     }
 }
+
+
+
 

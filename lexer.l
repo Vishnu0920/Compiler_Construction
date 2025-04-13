@@ -1,3 +1,4 @@
+
 %{
 #include "parser.tab.h"
 #include <stdio.h>
@@ -45,14 +46,12 @@ extern YYSTYPE yylval;
 "%"               { printf("TOKEN: MOD_OP at line %d\n", yylineno); return MOD_OP; }
 
 
-
 "<="              { printf("TOKEN: LEQ at line %d\n", yylineno); return LEQ; }
 ">="              { printf("TOKEN: GEQ at line %d\n", yylineno); return GEQ; }
 ">"               { printf("TOKEN: GT at line %d\n", yylineno); return GT; }
 "<"               { printf("TOKEN: LT at line %d\n", yylineno); return LT; }
 "="               { printf("TOKEN: EQ at line %d\n", yylineno); return EQ; }
 "<>"              { printf("TOKEN: NEQ at line %d\n", yylineno); return NEQ; }
-
 
 
 ":"               { printf("TOKEN: COLON at line %d\n", yylineno); return COLON; }
@@ -64,44 +63,28 @@ extern YYSTYPE yylval;
 "]"               { printf("TOKEN: RBRACK at line %d\n", yylineno); return RBRACK; }
 
 
-\([0-9]+,10\)   { 
-                    char *dec = strtok(yytext+1, ",");
-                    yylval.int_val = (int)strtol(dec, NULL, 10);
-                    printf("TOKEN: DEC_NUM (%d) at line %d\n", yylval.int_val, yylineno);
-                    return DEC_NUM; 
-                  }
-
-\([0-1]+,2\)      { 
-                    char *binary = strtok(yytext+1, ",");
-                    yylval.int_val = (int)strtol(binary, NULL, 2);
-                    printf("TOKEN: BIN_NUM (%d) at line %d\n", yylval.int_val, yylineno);
-                    return BIN_NUM;
-                  }
-
-\([0-7]+,8\)      { 
-                    char *octal = strtok(yytext+1, ",");
-                    yylval.int_val = (int)strtol(octal, NULL, 8);
-                    printf("TOKEN: OCT_NUM (%d) at line %d\n", yylval.int_val, yylineno);
-                    return OCT_NUM;
+[0-9]+            { 
+                    yylval.int_val = atoi(yytext);
+                    printf("TOKEN: NUMBER (%d) at line %d\n", yylval.int_val, yylineno);
+                    return NUMBER;
                   }
 
 
-\'([^\\\']|\\[ntbrfavo\'\"\\])\'  { 
+\'([^\\\']|\\[ntbrfavo\'\"\\])\'  {
                     yylval.str_val = strdup(yytext);
                     printf("TOKEN: CHARACTER (%s) at line %d\n", yytext, yylineno);
-                    return CHARACTER; 
+                    return CHARACTER;
                   }
 
-
    
-\"@((,@))*\" { 
+\"@((,@))*\" {
                     yylval.str_val = strdup(yytext);
                     printf("TOKEN: INPUT_STRING (%s) at line %d\n", yytext, yylineno);
                     return INPUT_STRING;
                   }
 
 
-\"([^\\\"]|\\[ntbrfavo\'\"\\])*\"  { 
+\"([^\\\"]|\\[ntbrfavo\'\"\\])*\"  {
                     yylval.str_val = strdup(yytext);
                     /* If the string contains a format specifier marker, it may be classified as a FORMAT_STRING */
                     if (strchr(yytext, '@')) {
@@ -114,20 +97,19 @@ extern YYSTYPE yylval;
                   }
 
 
-[a-z][a-z0-9_]*   { 
+[a-z][a-z0-9_]*   {
                     yylval.str_val = strdup(yytext);
                     printf("TOKEN: ID (%s) at line %d\n", yytext, yylineno);
-                    return ID; 
+                    return ID;
                   }
 
 [ \t\r]+          ; // ignore whitespace
 
 \n                { yylineno++; }
 
-.                 { 
-                    printf("ERROR: Unknown token '%s' at line %d\n", yytext, yylineno); 
-                    return 0; 
+.                 {
+                    printf("ERROR: Unknown token '%s' at line %d\n", yytext, yylineno);
+                    return 0;
                   }
 
 %%
-

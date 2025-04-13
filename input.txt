@@ -1,34 +1,21 @@
 begin program:
 begin VarDecl:
-  (x, int);
-  (y, int);
-  (msg, char);
-  (arr, int);
+(num1, int);
+(print, char);
+(num2, int);
+(sum_tem_123, int);
 end VarDecl
-
-print("Hello @", x);
-scan("@", x);
-
-x:=(1,10);
-y := (20,8);
-
-if (x <= y)
-  begin
-    print("x is less or equal @", x);
-  end
+num1:= (10, 2);
+if num1 > (20, 2)
+begin
+num1 :=(1, 10);
+num2 -= (99, 8);
+print("num1 = @, num2 = @", num1, num2);
+end
 else
-  print("x is greater");
-
-while (x < y)
-  begin
-    x := x + (1,10);
-    print("x incremented @", x);
-  end;
-
-for arr := (0,10) to (5,10) inc (1,10) do
-  begin
-    print("Index @", arr);
-  end;
-
+begin
+num /=(10, 2);
+print("num1 = @, num2 = @", num1);
+end;
+num3 := num1 + num2;
 end program
-
