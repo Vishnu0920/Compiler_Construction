@@ -13,6 +13,40 @@ void yyerror(const char *s) {
 }
 
 int syntax_errors = 0;
+
+/* Symbol table for variable tracking */
+#define MAX_SYMBOLS 100
+char* symbol_table[MAX_SYMBOLS];
+int symbol_count = 0;
+
+/* Add a variable to the symbol table */
+void add_symbol(char* name) {
+    if (symbol_count < MAX_SYMBOLS) {
+        /* Check if symbol already exists */
+        for (int i = 0; i < symbol_count; i++) {
+            if (strcmp(symbol_table[i], name) == 0) {
+                return; /* Already exists */
+            }
+        }
+        symbol_table[symbol_count] = strdup(name);
+        symbol_count++;
+    }
+}
+
+/* Check if a variable exists in the symbol table */
+int symbol_exists(char* name) {
+    for (int i = 0; i < symbol_count; i++) {
+        if (strcmp(symbol_table[i], name) == 0) {
+            return 1; /* Found */
+        }
+    }
+    return 0; /* Not found */
+}
+
+/* Check if a number base is valid (2, 8, or 10) */
+int is_valid_base(int base) {
+    return (base == 2 || base == 8 || base == 10);
+}
 %}
 
 %union {
@@ -79,18 +113,32 @@ VarNameDecl:
       ID                      
     {
         $$ = $1;
+        add_symbol($1);
         printf("Variable name: %s\n", $1);
     }
     | ID LBRACK NUMBER RBRACK
     {
         $$ = $1;
+        add_symbol($1);
         printf("Array declaration: %s[%d]\n", $1, $3);
     }
     ;
 
 VarName:
-      ID { $$ = $1; }
-    | ID LBRACK ArithmeticExpression RBRACK { $$ = $1; }
+      ID { 
+        $$ = $1; 
+        if (!symbol_exists($1)) {
+            fprintf(stderr, "Semantic Error at line %d: Undeclared variable '%s'\n", yylineno, $1);
+            syntax_errors++;
+        }
+      }
+    | ID LBRACK ArithmeticExpression RBRACK { 
+        $$ = $1; 
+        if (!symbol_exists($1)) {
+            fprintf(stderr, "Semantic Error at line %d: Undeclared variable '%s'\n", yylineno, $1);
+            syntax_errors++;
+        }
+      }
     ;
 
 StatementSection:
@@ -172,6 +220,10 @@ AssnArg:
 NUM:
       LPAR NUMBER COMMA NUMBER RPAR  
     { 
+        if (!is_valid_base($4)) {
+            fprintf(stderr, "Semantic Error at line %d: Invalid number base %d. Only bases 2, 8, and 10 are allowed.\n", yylineno, $4);
+            syntax_errors++;
+        }
         $$ = $2; 
         printf("Number: %d in base %d\n", $2, $4); 
     }
@@ -259,7 +311,3 @@ int main() {
         return 1;
     }
 }
-
-
-
-

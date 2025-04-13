@@ -8,9 +8,9 @@ begin VarDecl:
 (c[6], char);
 end VarDecl
 number := (3, 10);	//hello comment
-sum := (0, 99);			/* outer comment
+sum := (0, 10);			/* outer comment
 					*/
-
+wrong:=(2,10);
 
 while (number > (0, 10))
 begin
