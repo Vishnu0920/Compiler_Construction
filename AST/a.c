@@ -471,6 +471,16 @@ void printAST(ASTNode *node, int indent) {
             printAST(node->data.formatString.args, 0);
             break;
 
+        case NODE_SCAN:
+            printIndent(indent);
+            printf("(scan \"%s\"", node->data.scan.format ? node->data.scan.format : "");
+            if (node->data.scan.args) {
+                printf(" ");
+                printAST(node->data.scan.args, 0);
+            }
+            printf(")\n");
+            break;
+
         default:
             break;
     }
