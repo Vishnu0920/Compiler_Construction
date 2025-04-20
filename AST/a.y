@@ -238,13 +238,7 @@ NUM:
         $$ = createNumberNode($2, $4);
         printf("Number: %d in base %d\n", $2, $4);
     }
-    | NUMBER
-    {
-        $$ = createNumberNode($1, 10);  // Default base 10
-        printf("Number: %d in base 10\n", $1);
-    }
     ;
-
 
 ConditionalStmt:
       IF_K LPAR Condition RPAR Block SEMICOLON %prec IF_PREC
@@ -362,22 +356,26 @@ Primary:
 
 %%
 
-int main() {
-    yyin = fopen("input.txt", "r");
-    if (!yyin) {
-        perror("Failed to open input.txt");
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input file>\n", argv[0]);
         return 1;
     }
-   
+    yyin = fopen(argv[1], "r");
+    if (!yyin) {
+        perror("Error opening file");
+        return 1;
+    }
     int result = yyparse();
-   
+    fclose(yyin);
+
     if (result == 0 && rootNode != NULL) {
         printf("\nGenerated AST:\n");
         printAST(rootNode, 0);
         printf("\n");
         freeAST(rootNode);
     }
-   
+
     return result;
 }
 

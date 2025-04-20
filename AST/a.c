@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INC 1 // Loop operator for increment
-#define DEC 2 // Loop operator for decrement
+//#define INC 1 // Loop operator for increment
+//#define DEC 2 // Loop operator for decrement
 
 const char *nodeTypeToString(NodeType type) {
  switch (type) {
@@ -214,32 +214,49 @@ void printAST(ASTNode *node, int indent) {
         case NODE_PROGRAM:
             printIndent(indent);
             printf("(\n");
-
-            // Print variable declarations (each on its own line)
-            ASTNode *var = node->data.program.vars;
-            while (var) {
-                if (var->type == NODE_VARLIST) {
-                    printAST(var->data.op.left, indent + 2);
-                    var = var->data.op.right;
-                } else {
-                    printAST(var, indent + 2);
-                    var = NULL;
+            
+            // Print variable declarations inside their own brackets
+            if (node->data.program.vars) {
+                printIndent(indent + 2);
+                printf("(\n");
+                
+                // Print variable declarations
+                ASTNode *var = node->data.program.vars;
+                while (var) {
+                    if (var->type == NODE_VARLIST) {
+                        printAST(var->data.op.left, indent + 4);
+                        var = var->data.op.right;
+                    } else {
+                        printAST(var, indent + 4);
+                        var = NULL;
+                    }
                 }
-            }
+                printIndent(indent+2);
+                printf(")\n");
+                // Print statements as a grouped subtree
+                printIndent(indent + 2);
+                printf("(\n");
+                if (node->data.program.stmts) {
+                    printAST(node->data.program.stmts, indent + 4);
+                }
+                printIndent(indent + 2);
+                printf(")\n");
 
-            // Print statements as a grouped subtree
-            printIndent(indent + 2);
-            printf("(\n");
+                printIndent(indent);
+                printf(")\n");
+                break;
+            }
+            
+            // Print statements
             if (node->data.program.stmts) {
-                printAST(node->data.program.stmts, indent + 4);
+                printAST(node->data.program.stmts, indent + 2);
             }
-            printIndent(indent + 2);
-            printf(")\n");
-
+            
             printIndent(indent);
             printf(")\n");
             break;
 
+        // Other cases remain the same
         case NODE_VARLIST:
             printAST(node->data.op.left, indent);
             if (node->data.op.right) {
@@ -279,7 +296,7 @@ void printAST(ASTNode *node, int indent) {
             printf(")\n");
             break;
 
-        case NODE_IF:
+            case NODE_IF:
             printIndent(indent);
             printf("(if\n");
 
@@ -325,7 +342,7 @@ void printAST(ASTNode *node, int indent) {
             printf(")\n");
             break;
 
-            case NODE_FOR:
+        case NODE_FOR:
             printIndent(indent);
             printf("(for\n");
             
@@ -342,7 +359,12 @@ void printAST(ASTNode *node, int indent) {
             
             // Print step 
             printIndent(indent + 2);
-            printf("(dec ");
+            printf("(");
+            if (node->data.for_stmt.op_type == INC) {
+                printf("inc ");
+            } else {
+                printf("dec ");
+            }
             printAST(node->data.for_stmt.step, 0);
             printf(")\n");
             
@@ -373,7 +395,7 @@ void printAST(ASTNode *node, int indent) {
             printf(")");
             break;
         
-            case NODE_MUL:
+        case NODE_MUL:
             printf("(* ");
             printAST(node->data.op.left, 0);
             printf(" ");
@@ -451,6 +473,41 @@ void printAST(ASTNode *node, int indent) {
             printf(")");
             break;
 
+        case NODE_ADD_ASSIGN:
+            printIndent(indent);
+            printf("(+= %s ", node->data.assign.var_name);
+            printAST(node->data.assign.value, 0);
+            printf(")\n");
+            break;
+
+        case NODE_SUB_ASSIGN:
+            printIndent(indent);
+            printf("(-= %s ", node->data.assign.var_name);
+            printAST(node->data.assign.value, 0);
+            printf(")\n");
+            break;
+
+        case NODE_MUL_ASSIGN:
+            printIndent(indent);
+            printf("(*= %s ", node->data.assign.var_name);
+            printAST(node->data.assign.value, 0);
+            printf(")\n");
+            break;
+
+        case NODE_DIV_ASSIGN:
+            printIndent(indent);
+            printf("(/= %s ", node->data.assign.var_name);
+            printAST(node->data.assign.value, 0);
+            printf(")\n");
+            break;
+
+        case NODE_MOD_ASSIGN:
+            printIndent(indent);
+            printf("(%%= %s ", node->data.assign.var_name);
+            printAST(node->data.assign.value, 0);
+            printf(")\n");
+            break;
+
         case NODE_NUMBER:
             printf("(%d %d)", node->data.number.int_val, node->data.number.base);
             break;
@@ -459,7 +516,7 @@ void printAST(ASTNode *node, int indent) {
             printf("%s", node->data.var_ref.name);
             break;
 
-            case NODE_PRINT:
+        case NODE_PRINT:
             printIndent(indent);
             printf("(print ");
             printAST(node->data.print.arg, 0);
@@ -473,11 +530,8 @@ void printAST(ASTNode *node, int indent) {
 
         case NODE_SCAN:
             printIndent(indent);
-            printf("(scan \"%s\"", node->data.scan.format ? node->data.scan.format : "");
-            if (node->data.scan.args) {
-                printf(" ");
-                printAST(node->data.scan.args, 0);
-            }
+            printf("(scan \"%s\" ", node->data.scan.format);
+            printAST(node->data.scan.args, 0);
             printf(")\n");
             break;
 

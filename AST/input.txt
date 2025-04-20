@@ -1,9 +1,12 @@
 begin program:
 begin VarDecl:
-(i, int);
+(a, int);
+(b, int);
 end VarDecl
-
-scan("@,  @", a, b);
-print("Value is=@", a);
-
+a := (10, 10);
+b := (5, 10);
+for a := a + (3, 10) to (1, 10) dec b - (2, 10) do
+begin
+print("a = @", a);
+end;
 end program
