@@ -1,0 +1,9 @@
+begin program:
+begin VarDecl:
+(i, int);
+end VarDecl
+
+scan("@,  @", a, b);
+print("Value is=@", a);
+
+end program
